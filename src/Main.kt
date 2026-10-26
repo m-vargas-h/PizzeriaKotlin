@@ -30,16 +30,17 @@ fun main() {
     print("Ingrese dirección de entrega: ")
     val direccion: String = readLine().orEmpty().ifBlank { "Retiro en local" }
 
-    print("Ingrese teléfono (9 dígitos): ")
+    print("Ingrese teléfono (8 dígitos, sin +569): +569 ")
+    val entradaTelefono: String = readLine()?.trim().orEmpty()
     val telefono: Long = try {
-        // CONVERSIÓN String → Long; si es null o inválido se asigna valor por defecto
-        val numero = readLine()?.trim()?.toLong() ?: 0L
-        if (numero.toString().length == 9) numero else {
-            println("⚠ El teléfono debe tener 9 dígitos. Se asignará 0 por defecto.")
+        // Se valida el largo como texto (para no perder ceros iniciales)
+        // y luego se antepone el prefijo 569 → CONVERSIÓN String → Long
+        if (entradaTelefono.length == 8) ("569" + entradaTelefono).toLong() else {
+            println("El teléfono debe tener 8 dígitos. Se asignará 0 por defecto.")
             0L
         }
     } catch (e: NumberFormatException) {
-        println("⚠ Teléfono inválido. Se asignará 0 por defecto.")
+        println("Teléfono inválido (solo números). Se asignará 0 por defecto.")
         0L
     }
 
@@ -49,7 +50,7 @@ fun main() {
     println("\n--- Cliente registrado ---")
     println("Nombre:    ${cliente.nombre}")
     println("Dirección: ${cliente.direccion}")
-    println("Teléfono:  ${if (cliente.telefono == 0L) "No informado" else cliente.telefono}")
+    println("Teléfono:  ${if (cliente.telefono == 0L) "No informado" else "+${cliente.telefono}"}")
 
     // Selección de pizza y cantidad
     println("\n--- Menú ---")
@@ -65,7 +66,7 @@ fun main() {
         2 -> cuatroQuesos
         3 -> napolitana
         else -> {
-            println("⚠ Opción inválida. Se asignará ${pepperoni.nombrePizza} por defecto.")
+            println("Opción inválida. Se asignará ${pepperoni.nombrePizza} por defecto.")
             pepperoni
         }
     }
@@ -74,11 +75,11 @@ fun main() {
     val cantidad: Int = try {
         val valor = readLine()?.toInt() ?: 1
         if (valor > 0) valor else {
-            println("⚠ La cantidad debe ser mayor a 0. Se asignará 1 por defecto.")
+            println("La cantidad debe ser mayor a 0. Se asignará 1 por defecto.")
             1
         }
     } catch (e: NumberFormatException) {
-        println("⚠ Cantidad inválida. Se asignará 1 por defecto.")
+        println("Cantidad inválida. Se asignará 1 por defecto.")
         1
     }
 
@@ -97,10 +98,10 @@ fun main() {
     val mensajeStock: String = if (hayStock) {
         pizzaElegida.ingredientesDisponibles -= pedido.cantidadPizzas   // reduce inventario
         pedido.estadoPedido = "Preparación"
-        "✔ Stock suficiente. Pedido confirmado. Ingredientes restantes: ${pizzaElegida.ingredientesDisponibles}"
+        "Stock suficiente. Pedido confirmado. Ingredientes restantes: ${pizzaElegida.ingredientesDisponibles}"
     } else {
         pedido.estadoPedido = "Rechazado"
-        "✘ Ingredientes insuficientes (disponibles: ${pizzaElegida.ingredientesDisponibles}). El pedido no puede ser completado."
+        "Ingredientes insuficientes (disponibles: ${pizzaElegida.ingredientesDisponibles}). El pedido no puede ser completado."
     }
     println("\n--- Verificación de stock ---")
     println(mensajeStock)
@@ -113,9 +114,9 @@ fun main() {
             repartidorAsignado.disponible = false
             pedido.repartidor = repartidorAsignado
             pedido.estadoPedido = "En Camino"
-            println("✔ Pedido asignado a ${repartidorAsignado.nombre}.")
+            println("Pedido asignado a ${repartidorAsignado.nombre}.")
         } else {
-            println("⚠ No hay repartidores disponibles. El pedido queda en preparación.")
+            println("No hay repartidores disponibles. El pedido queda en preparación.")
         }
     }
 
@@ -129,7 +130,7 @@ fun mostrarResumen(pedido: Pedido) {
     println("CLIENTE")
     println("  Nombre:     ${pedido.cliente.nombre}")
     println("  Dirección:  ${pedido.cliente.direccion}")
-    println("  Teléfono:   ${if (pedido.cliente.telefono == 0L) "No informado" else pedido.cliente.telefono}")
+    println("  Teléfono:   ${if (pedido.cliente.telefono == 0L) "No informado" else "+${pedido.cliente.telefono}"}")
     println("PIZZA")
     println("  Nombre:     ${pedido.pizza.nombrePizza}")
     println("  Precio:     ${formatearPesos(pedido.pizza.precioUnitario.toDouble())}")
