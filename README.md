@@ -36,7 +36,7 @@ PizzeriaKotlin/
 
 1. Abrir el proyecto en IntelliJ IDEA.
 2. Abrir `src/Main.kt`.
-3. Ejecutar con el botón ▶ junto a `fun main()`.
+3. Ejecutar con `fun main()`.
 4. Ingresar los datos solicitados por consola.
 
 ## Ejemplo de ejecución
