@@ -1,8 +1,12 @@
 package model
 
-// datos del cliente
+// Cliente hereda nombre y contacto de Usuario
 class Cliente(
-    val nombre: String,
-    val direccion: String,
-    val telefono: Long
-)
+    nombre: String,
+    telefono: String,
+    correo: String,
+    val direccion: String
+) : Usuario(nombre, telefono, correo) {
+
+    override fun describir(): String = "Cliente: $nombre - $direccion"
+}

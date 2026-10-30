@@ -1,144 +1,21 @@
-import model.Cliente
-import model.Pedido
-import model.Pizza
-import model.Repartidor
-import java.util.Locale
-
-// Formato de moneda
-fun formatearPesos(monto: Double): String =
-    "$" + String.format(Locale.forLanguageTag("es-CL"), "%,.0f", monto)
+import model.*
+import util.formatearPesos
 
 fun main() {
+    val pepperoni = Producto("Pepperoni", 8990, mapOf("Masa" to 1, "Salsa de tomate" to 1, "Queso" to 2, "Pepperoni" to 3))
+    val cliente = Cliente("Juan Pérez", "+56 9 8765 4321", "juan@mail.com", "Av. Central 123")
+    val repartidor = Repartidor("Carlos", "+56 9 1111 2222", "carlos@pizzeria.cl", 2.5)
 
-    println("=== Sistema de Pedidos – Pizzería ===")
+    val pedido = Pedido(1001L, cliente, listOf(ItemPedido(pepperoni, 4)))
 
-    // PASO 1: Datos base (menú de pizzas y repartidores)
-    val pepperoni = Pizza("Pepperoni", 8990, 10)
-    val cuatroQuesos = Pizza("Cuatro Quesos", 9990, 5)
-    val napolitana = Pizza("Napolitana", 8490, 2)
+    println(pepperoni.detallarProducto())
+    println(cliente.describir() + " | " + cliente.contacto())
+    println(repartidor.describir())
+    println("Subtotal: ${formatearPesos(pedido.calcularSubtotal())}")
+    println("Descuento: ${formatearPesos(pedido.calcularDescuento())}")
+    println("Total: ${formatearPesos(pedido.calcularTotal())} (IVA: ${formatearPesos(pedido.calcularIva())})")
 
-    val repartidores = listOf(
-        Repartidor("Carlos", true),
-        Repartidor("María", true),
-        Repartidor("Luis", false)
-    )
-
-    // PASO 2: ENTRADA de datos del cliente (readLine + manejo de nulos/errores)
-    print("Ingrese nombre del cliente: ")
-    val nombre: String = readLine()?.ifBlank { "Cliente sin nombre" } ?: "Cliente sin nombre"
-
-    print("Ingrese dirección de entrega: ")
-    val direccion: String = readLine().orEmpty().ifBlank { "Retiro en local" }
-
-    print("Ingrese teléfono (8 dígitos, sin +569): +569 ")
-    val entradaTelefono: String = readLine()?.trim().orEmpty()
-    val telefono: Long = try {
-        // Se valida el largo como texto (para no perder ceros iniciales)
-        // y luego se antepone el prefijo 569 → CONVERSIÓN String → Long
-        if (entradaTelefono.length == 8) ("569" + entradaTelefono).toLong() else {
-            println("El teléfono debe tener 8 dígitos. Se asignará 0 por defecto.")
-            0L
-        }
-    } catch (e: NumberFormatException) {
-        println("Teléfono inválido (solo números). Se asignará 0 por defecto.")
-        0L
-    }
-
-    val cliente = Cliente(nombre, direccion, telefono)
-
-    // SALIDA: mostrar datos registrados
-    println("\n--- Cliente registrado ---")
-    println("Nombre:    ${cliente.nombre}")
-    println("Dirección: ${cliente.direccion}")
-    println("Teléfono:  ${if (cliente.telefono == 0L) "No informado" else "+${cliente.telefono}"}")
-
-    // Selección de pizza y cantidad
-    println("\n--- Menú ---")
-    println("1. ${pepperoni.nombrePizza} - ${formatearPesos(pepperoni.precioUnitario.toDouble())}")
-    println("2. ${cuatroQuesos.nombrePizza} - ${formatearPesos(cuatroQuesos.precioUnitario.toDouble())}")
-    println("3. ${napolitana.nombrePizza} - ${formatearPesos(napolitana.precioUnitario.toDouble())}")
-    print("Seleccione una pizza (1-3): ")
-    val opcion: Int = readLine()?.toIntOrNull() ?: 1
-
-    // when como expresión
-    val pizzaElegida: Pizza = when (opcion) {
-        1 -> pepperoni
-        2 -> cuatroQuesos
-        3 -> napolitana
-        else -> {
-            println("Opción inválida. Se asignará ${pepperoni.nombrePizza} por defecto.")
-            pepperoni
-        }
-    }
-
-    print("Ingrese cantidad de pizzas: ")
-    val cantidad: Int = try {
-        val valor = readLine()?.toInt() ?: 1
-        if (valor > 0) valor else {
-            println("La cantidad debe ser mayor a 0. Se asignará 1 por defecto.")
-            1
-        }
-    } catch (e: NumberFormatException) {
-        println("Cantidad inválida. Se asignará 1 por defecto.")
-        1
-    }
-
-    val pedido = Pedido(1001L, cliente, pizzaElegida, cantidad)
-
-    // PASO 3: Cálculo del total con descuento
-    pedido.calcularTotal()
-    println("\n--- Cálculo del pedido ---")
-    println("Subtotal:  ${formatearPesos(pedido.calcularSubtotal())}")
-    println("Descuento: ${if (pedido.calcularDescuento() > 0) "10% (-${formatearPesos(pedido.calcularDescuento())})" else "No aplica"}")
-    println("Total:     ${formatearPesos(pedido.totalPedido)}")
-
-    // PASO 4: Verificación de stock (if como expresión)
-    val hayStock: Boolean = pizzaElegida.ingredientesDisponibles >= pedido.cantidadPizzas
-
-    val mensajeStock: String = if (hayStock) {
-        pizzaElegida.ingredientesDisponibles -= pedido.cantidadPizzas   // reduce inventario
-        pedido.estadoPedido = "Preparación"
-        "Stock suficiente. Pedido confirmado. Ingredientes restantes: ${pizzaElegida.ingredientesDisponibles}"
-    } else {
-        pedido.estadoPedido = "Rechazado"
-        "Ingredientes insuficientes (disponibles: ${pizzaElegida.ingredientesDisponibles}). El pedido no puede ser completado."
-    }
-    println("\n--- Verificación de stock ---")
-    println(mensajeStock)
-
-    // PASO 5: Asignación de repartidor (solo si el pedido fue confirmado)
-    if (hayStock) {
-        val repartidorAsignado: Repartidor? = repartidores.firstOrNull { it.disponible }
-        println("\n--- Asignación de repartidor ---")
-        if (repartidorAsignado != null) {
-            repartidorAsignado.disponible = false
-            pedido.repartidor = repartidorAsignado
-            pedido.estadoPedido = "En Camino"
-            println("Pedido asignado a ${repartidorAsignado.nombre}.")
-        } else {
-            println("No hay repartidores disponibles. El pedido queda en preparación.")
-        }
-    }
-
-    // PASO 6: Resumen del pedido
-    mostrarResumen(pedido)
-}
-
-// Resumen ordenado como confirmación para cliente y pizzería
-fun mostrarResumen(pedido: Pedido) {
-    println("\n========== RESUMEN DEL PEDIDO #${pedido.idPedido} ==========")
-    println("CLIENTE")
-    println("  Nombre:     ${pedido.cliente.nombre}")
-    println("  Dirección:  ${pedido.cliente.direccion}")
-    println("  Teléfono:   ${if (pedido.cliente.telefono == 0L) "No informado" else "+${pedido.cliente.telefono}"}")
-    println("PIZZA")
-    println("  Nombre:     ${pedido.pizza.nombrePizza}")
-    println("  Precio:     ${formatearPesos(pedido.pizza.precioUnitario.toDouble())}")
-    println("PEDIDO")
-    println("  Cantidad:   ${pedido.cantidadPizzas}")
-    println("  Descuento:  ${if (pedido.cantidadPizzas > 3) "10%" else "No aplica"}")
-    println("  Total:      ${formatearPesos(pedido.totalPedido)}")
-    println("  Estado:     ${pedido.estadoPedido}")
-    println("  Repartidor: ${pedido.repartidor?.nombre ?: "Sin asignar"}")
-    println("=================================================")
+    pedido.cambiarEstado(EstadoPedido.EN_CAMINO)
+    repartidor.entregarPedido(pedido)
+    pedido.cambiarEstado(EstadoPedido.LISTO)   // debe rechazar: ya está entregado
 }
