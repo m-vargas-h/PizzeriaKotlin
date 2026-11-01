@@ -8,7 +8,13 @@ import util.validarTelefono
 
 // Registra un cliente validando sus datos; los campos vacíos o nulos toman valores por defecto
 fun registrarCliente(nombre: String?, telefono: String?, correo: String?, direccion: String?): Cliente {
-    val nombreFinal = nombre?.takeIf { it.isNotBlank() }?.trim() ?: "Cliente sin nombre"
+    // Normaliza el nombre: quita espacios extra y capitaliza cada palabra
+    val nombreFinal = nombre?.takeIf { it.isNotBlank() }
+        ?.trim()
+        ?.split(" ")
+        ?.filter { it.isNotBlank() }
+        ?.joinToString(" ") { palabra -> palabra.lowercase().replaceFirstChar { it.uppercase() } }
+        ?: "Cliente sin nombre"
     val direccionFinal = direccion?.takeIf { it.isNotBlank() }?.trim() ?: "Retiro en local"
     return Cliente(nombreFinal, validarTelefono(telefono), validarCorreo(correo), direccionFinal)
 }
