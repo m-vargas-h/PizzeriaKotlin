@@ -13,6 +13,9 @@ class Pedido(
 
     var repartidor: Repartidor? = null  // null hasta que se asigne
 
+    // Operadores seguros: si no hay notas (null o vacías) se muestra "Sin notas"
+    fun notasParaMostrar(): String = notas?.takeIf { it.isNotBlank() } ?: "Sin notas"
+
     fun cantidadPizzas(): Int = items.sumOf { it.cantidad }
 
     fun calcularSubtotal(): Double = items.sumOf { it.subtotal() }
