@@ -1,6 +1,6 @@
 package model
 
-import util.formatearPesos
+import utils.formatearPesos
 
 // precio: incluye IVA
 // ingredientes: nombre del ingrediente -> cantidad necesaria por unidad

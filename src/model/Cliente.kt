@@ -1,6 +1,6 @@
 package model
 
-import util.CORREO_POR_DEFECTO
+import utils.CORREO_POR_DEFECTO
 
 // Cliente hereda nombre y contacto de Usuario
 class Cliente(

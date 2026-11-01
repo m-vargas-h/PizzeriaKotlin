@@ -1,4 +1,4 @@
-package util
+package utils
 
 const val TELEFONO_POR_DEFECTO = "(000) 000-0000"
 const val CORREO_POR_DEFECTO = "correo@invalido.com"

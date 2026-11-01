@@ -75,7 +75,7 @@ class Inventario(stockInicial: Map<String, Int>) {
     }
 
     fun mostrarInventario() {
-        println("--- Inventario ---")
+        println("--- Inventario [Uso interno] ---")
         stock.forEach { (ingrediente, cantidad) -> println("  ${ingrediente.padEnd(18)} $cantidad") }
     }
 

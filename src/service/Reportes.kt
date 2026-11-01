@@ -2,11 +2,11 @@ package service
 
 import model.EstadoPedido
 import model.Pedido
-import util.formatearPesos
+import utils.formatearPesos
 
 // Reporte del día: recorre el arreglo con for y agrupa los pedidos con filter
 fun generarReporteDelDia(pedidos: Array<Pedido>) {
-    println("\n================ REPORTE DE PEDIDOS DEL DÍA ================")
+    println("\n========== REPORTE DE PEDIDOS DEL DÍA [Uso interno] ==========")
     for (pedido in pedidos) {
         val pizzas = pedido.items.joinToString(", ") { "${it.cantidad}x ${it.producto.nombre}" }
         println("#${pedido.idPedido}  ${pedido.cliente.nombre}")

@@ -4,7 +4,7 @@ import model.ItemPedido
 import model.Pedido
 import model.Producto
 import service.registrarCliente
-import util.formatearPesos
+import utils.formatearPesos
 
 private fun leerTexto(mensaje: String): String? {
     print(mensaje)
@@ -46,15 +46,18 @@ fun ingresarPedido(idPedido: Long, menu: List<Producto>): Pedido? {
     return Pedido(idPedido, cliente, items, notas)
 }
 
-// Lee la cantidad de un producto controlando valores no numéricos o menores a 1
-private fun leerItem(producto: Producto): ItemPedido? =
-    try {
-        val cantidad = leerTexto("Cantidad de ${producto.nombre}: ").orEmpty().trim().toInt()
-        ItemPedido(producto, cantidad).also { println("  Agregado: ${it.cantidad}x ${producto.nombre}") }
-    } catch (e: NumberFormatException) {
-        println("  Cantidad inválida: debe ser un número entero.")
-        null
-    } catch (e: IllegalArgumentException) {
-        println("  Error: ${e.message}")
-        null
+// Solicita la cantidad hasta que sea válida; retorna null solo si se corta la entrada
+private fun leerItem(producto: Producto): ItemPedido? {
+    while (true) {
+        val entrada = leerTexto("Cantidad de ${producto.nombre}: ") ?: return null
+        try {
+            val item = ItemPedido(producto, entrada.trim().toInt())
+            println("  Agregado: ${item.cantidad}x ${producto.nombre}")
+            return item
+        } catch (e: NumberFormatException) {
+            println("  Cantidad inválida: debe ser un número entero. Intente nuevamente.")
+        } catch (e: IllegalArgumentException) {
+            println("  Error: ${e.message} Intente nuevamente.")
+        }
     }
+}

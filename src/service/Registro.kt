@@ -2,9 +2,9 @@ package service
 
 import model.Cliente
 import model.Producto
-import util.formatearPesos
-import util.validarCorreo
-import util.validarTelefono
+import utils.formatearPesos
+import utils.validarCorreo
+import utils.validarTelefono
 
 // Registra un cliente validando sus datos; los campos vacíos o nulos toman valores por defecto
 fun registrarCliente(nombre: String?, telefono: String?, correo: String?, direccion: String?): Cliente {
