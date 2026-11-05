@@ -6,8 +6,15 @@ data class ItemPedido(
     val cantidad: Int
 ) {
     init {
-        require(cantidad > 0) { "La cantidad de ${producto.nombre} debe ser mayor a 0 (recibido: $cantidad)." }
+        require(cantidad in RANGO_CANTIDAD) {
+            "La cantidad de ${producto.nombre} debe estar entre ${RANGO_CANTIDAD.first} y ${RANGO_CANTIDAD.last} (recibido: $cantidad)."
+        }
     }
 
     fun subtotal(): Double = (producto.precio * cantidad).toDouble()
+
+    companion object {
+        // Range de cantidades permitidas por producto
+        val RANGO_CANTIDAD = 1..100
+    }
 }

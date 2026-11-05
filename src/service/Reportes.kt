@@ -2,6 +2,8 @@ package service
 
 import model.EstadoPedido
 import model.Pedido
+import model.PeriodoPromocion
+import utils.formatearFecha
 import utils.formatearPesos
 
 // Reporte del día: recorre el arreglo con for y agrupa los pedidos con filter
@@ -38,10 +40,13 @@ private fun listarIds(pedidos: List<Pedido>): String =
 fun mostrarResumen(pedido: Pedido) {
     val cliente = pedido.cliente
     val descuento = pedido.calcularDescuento()
+    val promocion = pedido.calcularDescuentoPromocion()
     val porcentajeDescuento = (Pedido.TASA_DESCUENTO * 100).toInt()
+    val porcentajePromocion = (PeriodoPromocion.TASA_DESCUENTO * 100).toInt()
     val porcentajeIva = (Pedido.TASA_IVA * 100).toInt()
 
     println("\n============== RESUMEN DEL PEDIDO #${pedido.idPedido} ==============")
+    println("  Fecha:       ${formatearFecha(pedido.fecha)}")
     println("CLIENTE")
     println("  Nombre:      ${cliente.nombre}")
     println("  Dirección:   ${cliente.direccion}")
@@ -57,6 +62,7 @@ fun mostrarResumen(pedido: Pedido) {
     println("TOTALES")
     println("  Subtotal:    ${formatearPesos(pedido.calcularSubtotal())}")
     println("  Descuento:   ${if (descuento > 0) "-${formatearPesos(descuento)} ($porcentajeDescuento%)" else "No aplica"}")
+    println("  Promoción:   ${if (promocion > 0) "-${formatearPesos(promocion)} (${PeriodoPromocion.NOMBRE} $porcentajePromocion%)" else "No aplica (fuera del periodo)"}")
     println("  Total final: ${formatearPesos(pedido.calcularTotal())}")
     println("  Impuestos:   IVA $porcentajeIva% incluido ${formatearPesos(pedido.calcularIva())} (neto ${formatearPesos(pedido.calcularNeto())})")
     println("ESTADO")

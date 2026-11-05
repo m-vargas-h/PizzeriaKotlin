@@ -1,11 +1,15 @@
 package model
 
+import java.time.LocalDate
+import kotlin.math.round
+
 // Pedido con varios productos; los precios ya incluyen IVA
 class Pedido(
     val idPedido: Long,
     val cliente: Cliente,
     val items: List<ItemPedido>,
-    val notas: String? = null          // opcional
+    val notas: String? = null,                // opcional
+    val fecha: LocalDate = LocalDate.now()    // define si aplica la promoción
 ) {
     // private set: el estado solo cambia mediante cambiarEstado()
     var estado: EstadoPedido = EstadoPedido.PENDIENTE
@@ -20,12 +24,19 @@ class Pedido(
 
     fun calcularSubtotal(): Double = items.sumOf { it.subtotal() }
 
-    // 10% de descuento si el pedido supera 3 pizzas
+    // 10% de descuento si el pedido supera 3 pizzas (redondeado a pesos enteros)
     fun calcularDescuento(): Double =
-        if (cantidadPizzas() > MINIMO_PIZZAS_DESCUENTO) calcularSubtotal() * TASA_DESCUENTO else 0.0
+        if (cantidadPizzas() > MINIMO_PIZZAS_DESCUENTO) round(calcularSubtotal() * TASA_DESCUENTO) else 0.0
+
+    // Range: verifica si la fecha del pedido está dentro del periodo de promoción
+    fun aplicaPromocion(): Boolean = PeriodoPromocion.estaVigente(fecha)
+
+    // Descuento de promoción sobre el total, después del descuento por cantidad (redondeado a pesos enteros)
+    fun calcularDescuentoPromocion(): Double =
+        if (aplicaPromocion()) round((calcularSubtotal() - calcularDescuento()) * PeriodoPromocion.TASA_DESCUENTO) else 0.0
 
     // Total final (IVA incluido)
-    fun calcularTotal(): Double = calcularSubtotal() - calcularDescuento()
+    fun calcularTotal(): Double = calcularSubtotal() - calcularDescuento() - calcularDescuentoPromocion()
 
     // Desglose del IVA contenido en el total
     fun calcularNeto(): Double = calcularTotal() / (1 + TASA_IVA)
