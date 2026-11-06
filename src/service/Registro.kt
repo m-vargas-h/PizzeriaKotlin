@@ -1,12 +1,20 @@
 package service
 
 import model.Cliente
+import model.Pizza
 import model.Producto
 import utils.formatearPesos
 import utils.validarCorreo
 import utils.validarTelefono
 
+// Set: con equals/hashCode sobrescritos, un cliente repetido no se agrega dos veces
+private val clientesRegistrados = mutableSetOf<Cliente>()
+
+// LinkedHashSet: mantiene el orden del menú y no admite productos duplicados
+private val catalogo = linkedSetOf<Producto>()
+
 // Registra un cliente validando sus datos; los campos vacíos o nulos toman valores por defecto
+// Si ya existe un cliente igual (mismo nombre y correo) se retorna el registro existente
 fun registrarCliente(nombre: String?, telefono: String?, correo: String?, direccion: String?): Cliente {
     // Normaliza el nombre: quita espacios extra y capitaliza cada palabra
     val nombreFinal = nombre?.takeIf { it.isNotBlank() }
@@ -16,16 +24,38 @@ fun registrarCliente(nombre: String?, telefono: String?, correo: String?, direcc
         ?.joinToString(" ") { palabra -> palabra.lowercase().replaceFirstChar { it.uppercase() } }
         ?: "Cliente sin nombre"
     val direccionFinal = direccion?.takeIf { it.isNotBlank() }?.trim() ?: "Retiro en local"
-    return Cliente(nombreFinal, validarTelefono(telefono), validarCorreo(correo), direccionFinal)
+    val cliente = Cliente(nombreFinal, validarTelefono(telefono), validarCorreo(correo), direccionFinal)
+
+    // add retorna false si el Set ya contiene un cliente igual
+    if (!clientesRegistrados.add(cliente)) {
+        println("  Cliente duplicado: ${cliente.nombre} (${cliente.correo}) ya está registrado. Se usa el registro existente.")
+        return clientesRegistrados.first { it == cliente }
+    }
+    return cliente
 }
 
-// Registra un producto a partir del precio ingresado como texto
+// Agrega un producto al catálogo; retorna false si ya existe (mismo nombre y categoría)
+fun agregarAlCatalogo(producto: Producto): Boolean {
+    val agregado = catalogo.add(producto)
+    if (!agregado) {
+        println("  Producto duplicado: ${producto.nombre} (${producto.categoria.descripcion}) ya existe en el catálogo.")
+    }
+    return agregado
+}
+
+fun obtenerCatalogo(): List<Producto> = catalogo.toList()
+
+// Registra una pizza nueva a partir del precio ingresado como texto
 // NumberFormatException se captura primero porque es subclase de IllegalArgumentException
 fun registrarProducto(nombre: String, precioTexto: String, ingredientes: Map<String, Int>): Producto? =
     try {
-        val precio = precioTexto.trim().toInt()
-        Producto(nombre, precio, ingredientes)
-            .also { println("  Producto registrado: ${it.nombre} (${formatearPesos(it.precio)})") }
+        val pizza = Pizza(nombre, precioTexto.trim().toInt(), ingredientes)
+        if (agregarAlCatalogo(pizza)) {
+            println("  Producto registrado: ${pizza.nombre} (${formatearPesos(pizza.precio)})")
+            pizza
+        } else {
+            null
+        }
     } catch (e: NumberFormatException) {
         println("  Error: el precio \"$precioTexto\" de $nombre no es un número válido. Corrija el dato.")
         null

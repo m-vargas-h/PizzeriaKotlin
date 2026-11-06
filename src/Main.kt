@@ -1,14 +1,23 @@
 import data.crearInventario
 import data.crearMenu
 import data.crearRepartidores
+import model.Bebida
+import model.Cliente
+import model.Combo
 import model.EstadoPedido
+import model.IngredienteExtra
 import model.ItemPedido
 import model.Pedido
 import model.PeriodoPromocion
+import model.Pizza
+import model.Producto
 import model.Usuario
 import service.*
 import ui.ingresarPedido
+import utils.esPromocionable
 import utils.formatearFecha
+import utils.inspeccionarClase
+import utils.listarClasesPromocionables
 import java.time.LocalDate
 
 fun main() {
@@ -17,20 +26,31 @@ fun main() {
     val inventario = crearInventario()
     val menu = crearMenu()
     val repartidores = crearRepartidores()
-    val (pepperoni, cuatroQuesos, vegetariana) = menu
+    val (pepperoni, cuatroQuesos, vegetariana, bebida, extraQueso) = menu
+    val comboPareja = menu[5]
+
+    // Catálogo sin duplicados (Set + equals/hashCode de Producto)
+    menu.forEach { agregarAlCatalogo(it) }
 
     println("\n--- Menú del día ---")
-    menu.forEach { println(it.detallarProducto()) }
+    obtenerCatalogo().forEach { println(it.detallarProducto()) }
 
     // Range de fechas: periodo en que los pedidos reciben descuento
     val porcentajePromocion = (PeriodoPromocion.TASA_DESCUENTO * 100).toInt()
-    println("\n${PeriodoPromocion.NOMBRE}: $porcentajePromocion% de descuento en pedidos del " +
+    println("\n${PeriodoPromocion.NOMBRE}: $porcentajePromocion% de descuento en pedidos con productos promocionables del " +
             "${formatearFecha(PeriodoPromocion.INICIO)} al ${formatearFecha(PeriodoPromocion.FIN)}")
 
-    // Registro de productos nuevos: el precio se valida con try-catch
+    // Anotaciones + reflection: qué clases de producto califican para promociones
+    println("\n--- Promociones (@Promocionable) [Uso interno] ---")
+    listarClasesPromocionables(listOf(Pizza::class, Bebida::class, IngredienteExtra::class, Combo::class))
+    println("  Elegibles en el menú: " + obtenerCatalogo().filter { esPromocionable(it) }.joinToString(", ") { it.nombre })
+
+    // Registro de productos nuevos: precio validado con try-catch y sin duplicados
     println("\n--- Registro de productos [Uso interno] ---")
     registrarProducto("Hawaiana", "abc", mapOf("Masa" to 1, "Queso" to 2))
     registrarProducto("Napolitana", "-500", mapOf("Masa" to 1, "Queso" to 2))
+    registrarProducto("Margarita", "8490", mapOf("Masa" to 1, "Salsa de tomate" to 1, "Queso" to 2))
+    registrarProducto("PEPPERONI", "9500", mapOf("Masa" to 1, "Queso" to 2))   // mismo nombre y categoría
 
     // Clientes precargados (Regex: se validan y formatean teléfono y correo al registrarlos)
     println("\n--- Registro de clientes [Uso interno] ---")
@@ -38,6 +58,9 @@ fun main() {
     val ana = registrarCliente("Ana Soto", "912345678", "ana.soto@mail.cl", "Los Aromos 456")
     val pedro = registrarCliente("Pedro Rojas", "87651234", "pedro@correo.cl", null)
     val sofia = registrarCliente("Sofía Díaz", "12345", "sofia@mail", "Pasaje 7 #89")
+    // Duplicado: mismo nombre y correo escritos distinto -> equals los considera iguales
+    val juanDuplicado = registrarCliente("juan pérez", "987654321", "JUAN@mail.com", "Otra dirección 1")
+    println("  ¿El duplicado retorna el mismo registro de Juan? ${juanDuplicado === juan}")
 
     // Polimorfismo: clientes y repartidores tratados como Usuario
     println("\n--- Usuarios registrados [Uso interno] ---")
@@ -55,12 +78,14 @@ fun main() {
         }
     }
 
-    // Pedidos precargados: #1002 tiene fecha fuera del periodo de promoción
-    val pedido1 = Pedido(1001L, juan, listOf(ItemPedido(pepperoni, 2), ItemPedido(vegetariana, 1)),
+    // Pedidos precargados:
+    // #1002 fuera del periodo de promoción; #1003 sin productos promocionables (bebida + extra)
+    val pedido1 = Pedido(1001L, juan,
+        listOf(ItemPedido(pepperoni, 2), ItemPedido(vegetariana, 1), ItemPedido(comboPareja, 1)),
         fecha = LocalDate.of(2026, 11, 5))
     val pedido2 = Pedido(1002L, ana, listOf(ItemPedido(pepperoni, 4)), "Tocar el timbre dos veces",
         LocalDate.of(2026, 10, 28))
-    val pedido3 = Pedido(1003L, pedro, listOf(ItemPedido(cuatroQuesos, 1)), "",
+    val pedido3 = Pedido(1003L, pedro, listOf(ItemPedido(bebida, 2), ItemPedido(extraQueso, 1)), "",
         LocalDate.of(2026, 11, 12))
     val pedido4 = Pedido(1004L, sofia, listOf(ItemPedido(vegetariana, 3)),
         fecha = LocalDate.of(2026, 11, 5))
@@ -82,8 +107,8 @@ fun main() {
     val lotePreparado = inventario.prepararLote(pepperoni.ingredientes, 2)
     println("  Lote de 2 ${pepperoni.nombre}: ${if (lotePreparado) "preparado" else "no se pudo preparar"}")
 
-    // Pedido ingresado por consola (fecha = hoy)
-    val pedidoConsola = ingresarPedido(1005L, menu)
+    // Pedido ingresado por consola (fecha = hoy), con el catálogo actualizado
+    val pedidoConsola = ingresarPedido(1005L, obtenerCatalogo())
     pedidoConsola?.let { procesarPedido(it, inventario, repartidores, EstadoPedido.EN_PREPARACION) }
 
     // Arreglo con todos los pedidos del día
@@ -95,4 +120,8 @@ fun main() {
 
     println()
     inventario.mostrarInventario()
+
+    // Reflection: análisis dinámico de las entidades clave
+    println("\n--- Análisis de clases con reflection [Uso interno] ---")
+    listOf(Pedido::class, Producto::class, Cliente::class).forEach { inspeccionarClase(it) }
 }

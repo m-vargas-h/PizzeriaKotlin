@@ -5,14 +5,15 @@ import model.Pedido
 import model.PeriodoPromocion
 import utils.formatearFecha
 import utils.formatearPesos
+import utils.esPromocionable
 
 // Reporte del día: recorre el arreglo con for y agrupa los pedidos con filter
 fun generarReporteDelDia(pedidos: Array<Pedido>) {
     println("\n========== REPORTE DE PEDIDOS DEL DÍA [Uso interno] ==========")
     for (pedido in pedidos) {
-        val pizzas = pedido.items.joinToString(", ") { "${it.cantidad}x ${it.producto.nombre}" }
+        val productos = pedido.items.joinToString(", ") { "${it.cantidad}x ${it.producto.nombre}" }
         println("#${pedido.idPedido}  ${pedido.cliente.nombre}")
-        println("       Pizzas: $pizzas")
+        println("       Productos: $productos")
         println("       Total:  ${formatearPesos(pedido.calcularTotal())} | Estado: ${pedido.estado.descripcion}")
     }
 
@@ -54,15 +55,22 @@ fun mostrarResumen(pedido: Pedido) {
     println("  Correo:      ${cliente.correo}")
     println("PRODUCTOS")
     for (item in pedido.items) {
+        val marca = if (esPromocionable(item.producto)) "*" else " "
         val nombre = item.producto.nombre.padEnd(15)
         val precio = formatearPesos(item.producto.precio).padStart(8)
         val subtotal = formatearPesos(item.subtotal()).padStart(9)
-        println("  $nombre x${item.cantidad}  $precio c/u  $subtotal")
+        println(" $marca$nombre x${item.cantidad}  $precio c/u  $subtotal")
     }
+    if (pedido.productosPromocionables().isNotEmpty()) println("  (*) Producto promocionable (@Promocionable)")
     println("TOTALES")
     println("  Subtotal:    ${formatearPesos(pedido.calcularSubtotal())}")
     println("  Descuento:   ${if (descuento > 0) "-${formatearPesos(descuento)} ($porcentajeDescuento%)" else "No aplica"}")
-    println("  Promoción:   ${if (promocion > 0) "-${formatearPesos(promocion)} (${PeriodoPromocion.NOMBRE} $porcentajePromocion%)" else "No aplica (fuera del periodo)"}")
+    val textoPromocion = when {
+        promocion > 0 -> "-${formatearPesos(promocion)} (${PeriodoPromocion.NOMBRE} $porcentajePromocion%)"
+        !PeriodoPromocion.estaVigente(pedido.fecha) -> "No aplica (fuera del periodo)"
+        else -> "No aplica (sin productos promocionables)"
+    }
+    println("  Promoción:   $textoPromocion")
     println("  Total final: ${formatearPesos(pedido.calcularTotal())}")
     println("  Impuestos:   IVA $porcentajeIva% incluido ${formatearPesos(pedido.calcularIva())} (neto ${formatearPesos(pedido.calcularNeto())})")
     println("ESTADO")

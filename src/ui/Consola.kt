@@ -41,7 +41,7 @@ fun ingresarPedido(idPedido: Long, menu: List<Producto>): Pedido? {
     while (true) {
         println("\n--- Menú ---")
         menu.forEachIndexed { indice, producto ->
-            println("${indice + 1}. ${producto.nombre} - ${formatearPesos(producto.precio)}")
+            println("${indice + 1}. ${producto.nombre} [${producto.categoria.descripcion}] - ${formatearPesos(producto.precio)}")
         }
         println("0. Terminar pedido")
 

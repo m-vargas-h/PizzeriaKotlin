@@ -12,6 +12,11 @@ fun procesarPedido(
     estadoObjetivo: EstadoPedido
 ) {
     println()
+    // Anotaciones: identifica en tiempo de ejecución los productos elegibles para promociones
+    val promocionables = pedido.productosPromocionables()
+    println("Pedido #${pedido.idPedido} - productos promocionables: " +
+            if (promocionables.isEmpty()) "ninguno" else promocionables.joinToString(", ") { it.nombre })
+
     if (!inventario.aceptarPedido(pedido)) {
         notificarCliente(pedido, "no pudimos aceptar tu pedido por falta de ingredientes")
         return

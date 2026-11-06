@@ -2,6 +2,7 @@ package model
 
 import java.time.LocalDate
 import kotlin.math.round
+import utils.esPromocionable
 
 // Pedido con varios productos; los precios ya incluyen IVA
 class Pedido(
@@ -20,7 +21,8 @@ class Pedido(
     // Operadores seguros: si no hay notas (null o vacías) se muestra "Sin notas"
     fun notasParaMostrar(): String = notas?.takeIf { it.isNotBlank() } ?: "Sin notas"
 
-    fun cantidadPizzas(): Int = items.sumOf { it.cantidad }
+    // Solo cuenta pizzas (incluidas las de un combo); bebidas e ingredientes no suman
+    fun cantidadPizzas(): Int = items.sumOf { it.cantidad * it.producto.pizzasIncluidas() }
 
     fun calcularSubtotal(): Double = items.sumOf { it.subtotal() }
 
@@ -28,8 +30,13 @@ class Pedido(
     fun calcularDescuento(): Double =
         if (cantidadPizzas() > MINIMO_PIZZAS_DESCUENTO) round(calcularSubtotal() * TASA_DESCUENTO) else 0.0
 
-    // Range: verifica si la fecha del pedido está dentro del periodo de promoción
-    fun aplicaPromocion(): Boolean = PeriodoPromocion.estaVigente(fecha)
+    // Anotaciones: productos del pedido marcados con @Promocionable (detectados con reflection)
+    fun productosPromocionables(): List<Producto> =
+        items.map { it.producto }.filter { esPromocionable(it) }.distinct()
+
+    // Range: aplica si la fecha está en el periodo y el pedido tiene al menos un producto promocionable
+    fun aplicaPromocion(): Boolean =
+        PeriodoPromocion.estaVigente(fecha) && productosPromocionables().isNotEmpty()
 
     // Descuento de promoción sobre el total, después del descuento por cantidad (redondeado a pesos enteros)
     fun calcularDescuentoPromocion(): Double =
