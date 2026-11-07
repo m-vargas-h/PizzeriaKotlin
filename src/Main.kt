@@ -89,6 +89,9 @@ fun main() {
         LocalDate.of(2026, 11, 12))
     val pedido4 = Pedido(1004L, sofia, listOf(ItemPedido(vegetariana, 3)),
         fecha = LocalDate.of(2026, 11, 5))
+    // Pedido adicional de Juan: se combina con el #1001 usando el operador + (solo para el resumen final)
+    val pedidoAdicional = Pedido(1006L, juan, listOf(ItemPedido(pepperoni, 1), ItemPedido(bebida, 2)),
+        "Agregar servilletas", LocalDate.of(2026, 11, 5))
 
     println("\n--- Procesamiento de pedidos [Uso interno] ---")
     procesarPedido(pedido1, inventario, repartidores, EstadoPedido.ENTREGADO)
@@ -124,4 +127,7 @@ fun main() {
     // Reflection: análisis dinámico de las entidades clave
     println("\n--- Análisis de clases con reflection [Uso interno] ---")
     listOf(Pedido::class, Producto::class, Cliente::class).forEach { inspeccionarClase(it) }
+
+    // Resumen final: integra +, desestructuración, @Promocionable e igualdad de objetos
+    mostrarResumenAvanzado(pedido1, pedidoAdicional, pedido2, obtenerCatalogo())
 }

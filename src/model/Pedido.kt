@@ -49,6 +49,28 @@ class Pedido(
     fun calcularNeto(): Double = calcularTotal() / (1 + TASA_IVA)
     fun calcularIva(): Double = calcularTotal() - calcularNeto()
 
+    // Operator overloading (+): combina dos pedidos del mismo cliente en uno nuevo
+    // Suma las cantidades de productos iguales (equals/hashCode de Producto) y recalcula el total con descuentos
+    operator fun plus(otro: Pedido): Pedido {
+        require(cliente == otro.cliente) {
+            "Solo se pueden combinar pedidos del mismo cliente (${cliente.nombre} / ${otro.cliente.nombre})."
+        }
+        val itemsCombinados = (items + otro.items)
+            .groupBy { it.producto }
+            .map { (producto, lineas) -> ItemPedido(producto, lineas.sumOf { it.cantidad }) }
+        val notasCombinadas = listOfNotNull(notas, otro.notas)
+            .filter { it.isNotBlank() }
+            .joinToString(" | ")
+            .ifBlank { null }
+        val fechaCombinada = if (otro.fecha.isAfter(fecha)) otro.fecha else fecha
+        return Pedido(++contadorCombinados, cliente, itemsCombinados, notasCombinadas, fechaCombinada)
+    }
+
+    // Desestructuración: val (cliente, productos, total) = pedido
+    operator fun component1(): Cliente = cliente
+    operator fun component2(): List<ItemPedido> = items
+    operator fun component3(): Double = calcularTotal()
+
     fun cambiarEstado(nuevoEstado: EstadoPedido): Boolean {
         if (estado.esFinal) {
             println("El pedido #$idPedido ya está ${estado.descripcion} y no puede cambiar de estado.")
@@ -62,5 +84,8 @@ class Pedido(
         const val TASA_IVA = 0.19
         const val TASA_DESCUENTO = 0.10
         const val MINIMO_PIZZAS_DESCUENTO = 3
+
+        // Los pedidos combinados reciben ids desde #9001
+        private var contadorCombinados = 9000L
     }
 }
