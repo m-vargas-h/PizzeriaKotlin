@@ -5,6 +5,7 @@ import model.Bebida
 import model.Cliente
 import model.Combo
 import model.EstadoPedido
+import model.Ingredientes
 import model.IngredienteExtra
 import model.ItemPedido
 import model.Pedido
@@ -47,10 +48,10 @@ fun main() {
 
     // Registro de productos nuevos: precio validado con try-catch y sin duplicados
     println("\n--- Registro de productos [Uso interno] ---")
-    registrarProducto("Hawaiana", "abc", mapOf("Masa" to 1, "Queso" to 2))
-    registrarProducto("Napolitana", "-500", mapOf("Masa" to 1, "Queso" to 2))
-    registrarProducto("Margarita", "8490", mapOf("Masa" to 1, "Salsa de tomate" to 1, "Queso" to 2))
-    registrarProducto("PEPPERONI", "9500", mapOf("Masa" to 1, "Queso" to 2))   // mismo nombre y categoría
+    registrarProducto("Hawaiana", "abc", mapOf(Ingredientes.MASA to 1, Ingredientes.QUESO to 2))
+    registrarProducto("Napolitana", "-500", mapOf(Ingredientes.MASA to 1, Ingredientes.QUESO to 2))
+    registrarProducto("Margarita", "8490", mapOf(Ingredientes.MASA to 1, Ingredientes.SALSA_TOMATE to 1, Ingredientes.QUESO to 2))
+    registrarProducto("PEPPERONI", "9500", mapOf(Ingredientes.MASA to 1, Ingredientes.QUESO to 2))   // mismo nombre y categoría
 
     // Clientes precargados (Regex: se validan y formatean teléfono y correo al registrarlos)
     println("\n--- Registro de clientes [Uso interno] ---")
@@ -94,16 +95,20 @@ fun main() {
         "Agregar servilletas", LocalDate.of(2026, 11, 5))
 
     println("\n--- Procesamiento de pedidos [Uso interno] ---")
-    procesarPedido(pedido1, inventario, repartidores, EstadoPedido.ENTREGADO)
-    procesarPedido(pedido2, inventario, repartidores, EstadoPedido.EN_CAMINO)
-    procesarPedido(pedido3, inventario, repartidores, EstadoPedido.LISTO)
-    procesarPedido(pedido4, inventario, repartidores, EstadoPedido.ENTREGADO) // sin champiñones suficientes
+    // procesarPedido retorna el estado final: el resultado se usa directamente
+    val resultados = listOf(
+        pedido1 to EstadoPedido.ENTREGADO,
+        pedido2 to EstadoPedido.EN_CAMINO,
+        pedido3 to EstadoPedido.LISTO,
+        pedido4 to EstadoPedido.ENTREGADO        // sin champiñones suficientes
+    ).map { (pedido, objetivo) -> pedido.idPedido to procesarPedido(pedido, inventario, repartidores, objetivo) }
+    println("\n  Resultado: " + resultados.joinToString(" | ") { (id, estado) -> "#$id ${estado.descripcion}" })
 
     // Reabastecimiento tras el rechazo del #1004 (try-catch para cantidades inválidas)
     println("\n--- Reabastecimiento [Uso interno] ---")
-    registrarReabastecimiento(inventario, "Champiñones", "-5")
-    registrarReabastecimiento(inventario, "Champiñones", "diez")
-    registrarReabastecimiento(inventario, "Champiñones", "10")
+    registrarReabastecimiento(inventario, Ingredientes.CHAMPINONES, "-5")
+    registrarReabastecimiento(inventario, Ingredientes.CHAMPINONES, "diez")
+    registrarReabastecimiento(inventario, Ingredientes.CHAMPINONES, "10")
 
     // Lote anticipado: calcula los ingredientes necesarios y actualiza el inventario
     println("\n--- Preparación de lote [Uso interno] ---")
@@ -112,7 +117,10 @@ fun main() {
 
     // Pedido ingresado por consola (fecha = hoy), con el catálogo actualizado
     val pedidoConsola = ingresarPedido(1005L, obtenerCatalogo())
-    pedidoConsola?.let { procesarPedido(it, inventario, repartidores, EstadoPedido.EN_PREPARACION) }
+    pedidoConsola?.let {
+        val estado = procesarPedido(it, inventario, repartidores, EstadoPedido.EN_PREPARACION)
+        println("  Resultado: #${it.idPedido} ${estado.descripcion}")
+    }
 
     // Arreglo con todos los pedidos del día
     val precargados = arrayOf(pedido1, pedido2, pedido3, pedido4)

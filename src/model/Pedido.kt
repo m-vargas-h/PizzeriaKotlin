@@ -12,13 +12,22 @@ class Pedido(
     val notas: String? = null,                // opcional
     val fecha: LocalDate = LocalDate.now()    // define si aplica la promoción
 ) {
-    // private set: el estado solo cambia mediante cambiarEstado()
+    // El estado solo cambia mediante cambiarEstado()
     var estado: EstadoPedido = EstadoPedido.PENDIENTE
         private set
 
-    var repartidor: Repartidor? = null  // null hasta que se asigne
+    // El repartidor solo se asigna mediante asignarRepartidor() (null hasta entonces)
+    var repartidor: Repartidor? = null
+        private set
 
-    // Operadores seguros: si no hay notas (null o vacías) se muestra "Sin notas"
+    // Se asigna una sola vez y solo si el pedido está Listo; el pedido pasa a En camino
+    fun asignarRepartidor(nuevo: Repartidor): Boolean {
+        if (repartidor != null || estado != EstadoPedido.LISTO) return false
+        repartidor = nuevo
+        return cambiarEstado(EstadoPedido.EN_CAMINO)
+    }
+
+    // Si no hay notas (null o vacías) se muestra "Sin notas"
     fun notasParaMostrar(): String = notas?.takeIf { it.isNotBlank() } ?: "Sin notas"
 
     // Solo cuenta pizzas (incluidas las de un combo); bebidas e ingredientes no suman

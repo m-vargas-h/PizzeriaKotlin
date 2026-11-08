@@ -71,8 +71,8 @@ fun mostrarResumen(pedido: Pedido) {
         else -> "No aplica (sin productos promocionables)"
     }
     println("  Promoción:   $textoPromocion")
+    println("  IVA ($porcentajeIva%):   ${formatearPesos(pedido.calcularIva())} incluido (neto ${formatearPesos(pedido.calcularNeto())})")
     println("  Total final: ${formatearPesos(pedido.calcularTotal())}")
-    println("  Impuestos:   IVA $porcentajeIva% incluido ${formatearPesos(pedido.calcularIva())} (neto ${formatearPesos(pedido.calcularNeto())})")
     println("ESTADO")
     println("  Estado:      ${pedido.estado.descripcion}")
     println("  Repartidor:  ${pedido.repartidor?.nombre ?: "Sin asignar"}")

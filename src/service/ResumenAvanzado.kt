@@ -2,6 +2,7 @@ package service
 
 import model.Bebida
 import model.Cliente
+import model.Ingredientes
 import model.Pedido
 import model.Pizza
 import model.Producto
@@ -57,8 +58,9 @@ fun mostrarResumenAvanzado(pedidoA: Pedido, pedidoB: Pedido, pedidoOtroCliente: 
             "${setOf(cliente, copiaCliente, otroCliente).size} clientes únicos")
 
     val pepperoni = catalogo.first { it.nombre == "Pepperoni" }
-    val pepperoniOtroPrecio = Pizza("pepperoni", 9500, mapOf("Masa" to 1, "Queso" to 2))
-    val margaritaPizza = Pizza("Margarita", 8490, mapOf("Masa" to 1, "Salsa de tomate" to 1, "Queso" to 2))
+    val pepperoniOtroPrecio = Pizza("pepperoni", 9500, mapOf(Ingredientes.MASA to 1, Ingredientes.QUESO to 2))
+    val margaritaPizza = Pizza("Margarita", 8490,
+        mapOf(Ingredientes.MASA to 1, Ingredientes.SALSA_TOMATE to 1, Ingredientes.QUESO to 2))
     val margaritaBebida = Bebida("Margarita", 3990)
     println("  Productos (nombre + categoría):")
     println("    $pepperoni == $pepperoniOtroPrecio (otro precio): ${pepperoni == pepperoniOtroPrecio}")
