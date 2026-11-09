@@ -11,6 +11,9 @@ class Inventario(stockInicial: Map<String, Int>) {
 
     fun cantidadDisponible(ingrediente: String): Int = stock[ingrediente] ?: 0
 
+    // Nombres de los ingredientes registrados (para elegir cuál reabastecer)
+    fun ingredientes(): List<String> = stock.keys.toList()
+
     // Cantidad necesaria de cada ingrediente para preparar un lote de pizzas
     fun calcularNecesarios(ingredientes: Map<String, Int>, cantidadPizzas: Int): Map<String, Int> =
         ingredientes.mapValues { (_, porUnidad) -> porUnidad * cantidadPizzas }

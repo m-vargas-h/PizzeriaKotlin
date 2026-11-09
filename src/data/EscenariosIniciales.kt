@@ -4,18 +4,18 @@ import model.Cliente
 import model.ItemPedido
 import model.Pedido
 import model.Producto
-import service.registrarCliente
+import service.Registro
 import java.time.LocalDate
 
 // Clientes con los que parte el día (se validan teléfono y correo al registrarlos)
-fun registrarClientesIniciales(): List<Cliente> = listOf(
-    registrarCliente("Juan Pérez", "+56 9 8765 4321", "juan@mail.com", "Av. Central 123"),
-    registrarCliente("Ana Soto", "912345678", "ana.soto@mail.cl", "Los Aromos 456"),
-    registrarCliente("Pedro Rojas", "87651234", "pedro@correo.cl", null),
-    registrarCliente("Sofía Díaz", "12345", "sofia@mail", "Pasaje 7 #89")
+fun registrarClientesIniciales(registro: Registro): List<Cliente> = listOf(
+    registro.registrarCliente("Juan Pérez", "+56 9 8765 4321", "juan@mail.com", "Av. Central 123"),
+    registro.registrarCliente("Ana Soto", "912345678", "ana.soto@mail.cl", "Los Aromos 456"),
+    registro.registrarCliente("Pedro Rojas", "87651234", "pedro@correo.cl", null),
+    registro.registrarCliente("Sofía Díaz", "12345", "sofia@mail", "Pasaje 7 #89")
 )
 
-// Pedidos precargados (el menú llega en el orden de crearMenu())s
+// Pedidos precargados (el menú llega en el orden de crearMenu())
 fun crearPedidosIniciales(clientes: List<Cliente>, menu: List<Producto>): List<Pedido> {
     val (juan, ana, pedro, sofia) = clientes
     val (pepperoni, _, vegetariana, bebida, extraQueso) = menu

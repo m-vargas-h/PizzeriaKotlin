@@ -2,6 +2,9 @@ package model
 
 import utils.CORREO_POR_DEFECTO
 
+// Dirección que se asigna cuando el cliente no indica una (pedido para retiro)
+const val RETIRO_EN_LOCAL = "Retiro en local"
+
 // Cliente hereda nombre y contacto de Usuario
 class Cliente(
     nombre: String,
@@ -14,6 +17,8 @@ class Cliente(
 
     // null si el correo no es válido; se usa con ?.let para notificar
     fun correoParaNotificar(): String? = correo.takeIf { it != CORREO_POR_DEFECTO }
+
+    fun esRetiroEnLocal(): Boolean = direccion == RETIRO_EN_LOCAL
 
     // Desestructuración: val (nombre, correo, telefono) = cliente
     // Se define manualmente porque Cliente hereda de Usuario y no puede ser data class

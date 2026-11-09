@@ -3,14 +3,15 @@ package ui
 import model.ItemPedido
 import model.Pedido
 import model.Producto
-import service.registrarCliente
+import service.Registro
 import utils.esCorreoValido
 import utils.esTelefonoValido
 import utils.formatearPesos
 
-private fun leerTexto(mensaje: String): String? {
+// internal: compartida con MenuPrincipal.kt (mismo módulo)
+internal fun leerTexto(mensaje: String): String? {
     print(mensaje)
-    return readLine()
+    return readlnOrNull()
 }
 
 // Repite la pregunta hasta que el dato sea válido; retorna null solo si se corta la entrada
@@ -22,9 +23,10 @@ private fun leerValidado(mensaje: String, mensajeError: String, esValido: (Strin
     }
 }
 
-// Ingreso de un pedido por consola; retorna null si no se agregan productos
-fun ingresarPedido(idPedido: Long, menu: List<Producto>): Pedido? {
-    println("\n============== NUEVO PEDIDO POR CONSOLA ==============")
+// Ingreso de un pedido por consola con el catálogo de la jornada; retorna null si no se agregan productos
+fun ingresarPedido(idPedido: Long, registro: Registro): Pedido? {
+    val menu = registro.obtenerCatalogo()
+    println("\n============== NUEVO PEDIDO #$idPedido ==============")
     val nombre = leerTexto("Nombre del cliente: ")
     val telefono = leerValidado(
         "Teléfono (ej: 912345678): ",
@@ -35,7 +37,7 @@ fun ingresarPedido(idPedido: Long, menu: List<Producto>): Pedido? {
         "Correo inválido. Use el formato nombre@dominio.com e intente nuevamente."
     ) { esCorreoValido(it) }
     val direccion = leerTexto("Dirección de entrega (vacío = retiro en local): ")
-    val cliente = registrarCliente(nombre, telefono, correo, direccion)
+    val cliente = registro.registrarCliente(nombre, telefono, correo, direccion)
 
     val items = mutableListOf<ItemPedido>()
     while (true) {
@@ -72,10 +74,10 @@ private fun leerItem(producto: Producto): ItemPedido? {
             val item = ItemPedido(producto, entrada.trim().toInt())
             println("  Agregado: ${item.cantidad}x ${producto.nombre}")
             return item
-        } catch (e: NumberFormatException) {
-            println("  Cantidad inválida: debe ser un número entero. Intente nuevamente.")
         } catch (e: IllegalArgumentException) {
-            println("  Error: ${e.message} Intente nuevamente.")
+            // NumberFormatException es subclase de IllegalArgumentException: se distingue con is
+            if (e is NumberFormatException) println("  Cantidad inválida: debe ser un número entero. Intente nuevamente.")
+            else println("  Error: ${e.message} Intente nuevamente.")
         }
     }
 }

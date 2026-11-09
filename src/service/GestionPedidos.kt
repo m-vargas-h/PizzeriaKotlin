@@ -37,3 +37,30 @@ fun procesarPedido(
     }
     return pedido.estado
 }
+
+// Despacha un pedido en preparación: Listo -> (retiro en local) Entregado,
+// o Listo -> En camino con el repartidor más cercano -> Entregado. Retorna el estado final
+fun despacharPedido(pedido: Pedido, repartidores: List<Repartidor>): EstadoPedido {
+    println()
+    if (pedido.estado != EstadoPedido.EN_PREPARACION) {
+        println("El pedido #${pedido.idPedido} no está en preparación (estado: ${pedido.estado.descripcion}).")
+        return pedido.estado
+    }
+
+    pedido.cambiarEstado(EstadoPedido.LISTO)
+    notificarCliente(pedido, "tu pedido está listo")
+
+    if (pedido.cliente.esRetiroEnLocal()) {
+        pedido.cambiarEstado(EstadoPedido.ENTREGADO)
+        println("Pedido #${pedido.idPedido} retirado en el local por ${pedido.cliente.nombre}.")
+        notificarCliente(pedido, "retiraste tu pedido en el local. ¡Buen provecho!")
+        return pedido.estado
+    }
+
+    val repartidor = asignarRepartidor(pedido, repartidores) ?: return pedido.estado
+    notificarCliente(pedido, "tu pedido va en camino con ${repartidor.nombre}")
+    if (repartidor.entregarPedido(pedido)) {
+        notificarCliente(pedido, "tu pedido fue entregado. ¡Buen provecho!")
+    }
+    return pedido.estado
+}
