@@ -3,7 +3,7 @@ package model
 // Sin @Promocionable: no participa en promociones
 class Bebida(
     nombre: String,
-    precio: Int
+    precio: Long
 ) : Producto(nombre, precio, emptyMap()) {
 
     override val categoria: CategoriaProducto

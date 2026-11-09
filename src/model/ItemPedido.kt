@@ -11,7 +11,7 @@ data class ItemPedido(
         }
     }
 
-    fun subtotal(): Double = (producto.precio * cantidad).toDouble()
+    fun subtotal(): Long = producto.precio * cantidad
 
     companion object {
         // Range de cantidades permitidas por producto

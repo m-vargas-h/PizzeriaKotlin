@@ -3,9 +3,25 @@ package service
 import model.EstadoPedido
 import model.Pedido
 import model.PeriodoPromocion
+import model.Producto
+import model.Usuario
+import utils.esPromocionable
 import utils.formatearFecha
 import utils.formatearPesos
-import utils.esPromocionable
+
+// Menú del día y periodo de promoción vigente
+fun mostrarMenuDelDia(catalogo: List<Producto>) {
+    println("\n--- Menú del día ---")
+    catalogo.forEach { println(it.detallarProducto()) }
+    println("\n${PeriodoPromocion.NOMBRE}: ${PeriodoPromocion.PORCENTAJE_DESCUENTO}% de descuento en pedidos con productos promocionables del " +
+            "${formatearFecha(PeriodoPromocion.INICIO)} al ${formatearFecha(PeriodoPromocion.FIN)}")
+}
+
+// Polimorfismo: clientes y repartidores tratados como Usuario
+fun mostrarUsuarios(usuarios: List<Usuario>) {
+    println("\n--- Usuarios registrados [Uso interno] ---")
+    usuarios.forEach { println("  ${it.describir()} | ${it.contacto()}") }
+}
 
 // Reporte del día: recorre el arreglo con for y agrupa los pedidos con filter
 fun generarReporteDelDia(pedidos: Array<Pedido>) {
@@ -14,7 +30,7 @@ fun generarReporteDelDia(pedidos: Array<Pedido>) {
         val productos = pedido.items.joinToString(", ") { "${it.cantidad}x ${it.producto.nombre}" }
         println("#${pedido.idPedido}  ${pedido.cliente.nombre}")
         println("       Productos: $productos")
-        println("       Total:  ${formatearPesos(pedido.calcularTotal())} | Estado: ${pedido.estado.descripcion}")
+        println("       Total:     ${formatearPesos(pedido.total)} | Estado: ${pedido.estado.descripcion}")
     }
 
     val completados = pedidos.filter { it.estado == EstadoPedido.ENTREGADO }
@@ -30,7 +46,7 @@ fun generarReporteDelDia(pedidos: Array<Pedido>) {
     println("Pendientes  (${pendientes.size}): ${listarIds(pendientes)}")
     println("Rechazados  (${rechazados.size}): ${listarIds(rechazados)}")
     println("Productos vendidos hoy: ${productosVendidos.joinToString(", ")}")
-    println("Total vendido: ${formatearPesos(validos.sumOf { it.calcularTotal() })}")
+    println("Total vendido: ${formatearPesos(validos.sumOf { it.total })}")
     println("============================================================")
 }
 
@@ -38,13 +54,9 @@ private fun listarIds(pedidos: List<Pedido>): String =
     if (pedidos.isEmpty()) "-" else pedidos.joinToString(", ") { "#${it.idPedido}" }
 
 // Resumen del pedido: confirmación para el cliente y la pizzería
+// Desglose en orden: subtotal, descuento, promoción, IVA incluido y total final
 fun mostrarResumen(pedido: Pedido) {
     val cliente = pedido.cliente
-    val descuento = pedido.calcularDescuento()
-    val promocion = pedido.calcularDescuentoPromocion()
-    val porcentajeDescuento = (Pedido.TASA_DESCUENTO * 100).toInt()
-    val porcentajePromocion = (PeriodoPromocion.TASA_DESCUENTO * 100).toInt()
-    val porcentajeIva = (Pedido.TASA_IVA * 100).toInt()
 
     println("\n============== RESUMEN DEL PEDIDO #${pedido.idPedido} ==============")
     println("  Fecha:       ${formatearFecha(pedido.fecha)}")
@@ -63,16 +75,17 @@ fun mostrarResumen(pedido: Pedido) {
     }
     if (pedido.productosPromocionables().isNotEmpty()) println("  (*) Producto promocionable (@Promocionable)")
     println("TOTALES")
-    println("  Subtotal:    ${formatearPesos(pedido.calcularSubtotal())}")
-    println("  Descuento:   ${if (descuento > 0) "-${formatearPesos(descuento)} ($porcentajeDescuento%)" else "No aplica"}")
+    println("  Subtotal:    ${formatearPesos(pedido.subtotal)}")
+    println("  Descuento:   ${if (pedido.descuento > 0) "-${formatearPesos(pedido.descuento)} (${Pedido.PORCENTAJE_DESCUENTO}%)" else "No aplica"}")
     val textoPromocion = when {
-        promocion > 0 -> "-${formatearPesos(promocion)} (${PeriodoPromocion.NOMBRE} $porcentajePromocion%)"
+        pedido.descuentoPromocion > 0 ->
+            "-${formatearPesos(pedido.descuentoPromocion)} (${PeriodoPromocion.NOMBRE} ${PeriodoPromocion.PORCENTAJE_DESCUENTO}%)"
         !PeriodoPromocion.estaVigente(pedido.fecha) -> "No aplica (fuera del periodo)"
         else -> "No aplica (sin productos promocionables)"
     }
     println("  Promoción:   $textoPromocion")
-    println("  IVA ($porcentajeIva%):   ${formatearPesos(pedido.calcularIva())} incluido (neto ${formatearPesos(pedido.calcularNeto())})")
-    println("  Total final: ${formatearPesos(pedido.calcularTotal())}")
+    println("  IVA (${Pedido.PORCENTAJE_IVA}%):   ${formatearPesos(pedido.iva)} incluido (neto ${formatearPesos(pedido.neto)})")
+    println("  Total final: ${formatearPesos(pedido.total)}")
     println("ESTADO")
     println("  Estado:      ${pedido.estado.descripcion}")
     println("  Repartidor:  ${pedido.repartidor?.nombre ?: "Sin asignar"}")

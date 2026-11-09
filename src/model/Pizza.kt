@@ -5,7 +5,7 @@ import annotations.Promocionable
 @Promocionable("Pizzas del menú participan en las promociones")
 class Pizza(
     nombre: String,
-    precio: Int,
+    precio: Long,
     ingredientes: Map<String, Int>
 ) : Producto(nombre, precio, ingredientes) {
 

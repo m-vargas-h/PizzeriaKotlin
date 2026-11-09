@@ -7,7 +7,7 @@ import utils.formatearPesos
 // ingredientes: nombre del ingrediente -> cantidad necesaria por unidad (vacío si no usa inventario)
 abstract class Producto(
     val nombre: String,
-    val precio: Int,
+    val precio: Long,
     val ingredientes: Map<String, Int>
 ) {
     // Cada subclase define su categoría

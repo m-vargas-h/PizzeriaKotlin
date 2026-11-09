@@ -1,7 +1,8 @@
 package model
 
 import java.time.LocalDate
-import kotlin.math.round
+import utils.aplicarPorcentaje
+import utils.dividirRedondeado
 import utils.esPromocionable
 
 // Pedido con varios productos; los precios ya incluyen IVA
@@ -33,12 +34,6 @@ class Pedido(
     // Solo cuenta pizzas (incluidas las de un combo); bebidas e ingredientes no suman
     fun cantidadPizzas(): Int = items.sumOf { it.cantidad * it.producto.pizzasIncluidas() }
 
-    fun calcularSubtotal(): Double = items.sumOf { it.subtotal() }
-
-    // 10% de descuento si el pedido supera 3 pizzas (redondeado a pesos enteros)
-    fun calcularDescuento(): Double =
-        if (cantidadPizzas() > MINIMO_PIZZAS_DESCUENTO) round(calcularSubtotal() * TASA_DESCUENTO) else 0.0
-
     // Anotaciones: productos del pedido marcados con @Promocionable (detectados con reflection)
     fun productosPromocionables(): List<Producto> =
         items.map { it.producto }.filter { esPromocionable(it) }.distinct()
@@ -47,16 +42,24 @@ class Pedido(
     fun aplicaPromocion(): Boolean =
         PeriodoPromocion.estaVigente(fecha) && productosPromocionables().isNotEmpty()
 
-    // Descuento de promoción sobre el total, después del descuento por cantidad (redondeado a pesos enteros)
-    fun calcularDescuentoPromocion(): Double =
-        if (aplicaPromocion()) round((calcularSubtotal() - calcularDescuento()) * PeriodoPromocion.TASA_DESCUENTO) else 0.0
+    // Montos en pesos enteros (Long). items y fecha no cambian, así que se calculan una sola vez
+    // al crear el pedido y se reutilizan en descuentos, IVA, total y resúmenes
+    val subtotal: Long = items.sumOf { it.subtotal() }
+
+    // 10% de descuento si el pedido supera 3 pizzas
+    val descuento: Long =
+        if (cantidadPizzas() > MINIMO_PIZZAS_DESCUENTO) aplicarPorcentaje(subtotal, PORCENTAJE_DESCUENTO) else 0L
+
+    // Promoción sobre el total después del descuento por cantidad
+    val descuentoPromocion: Long =
+        if (aplicaPromocion()) aplicarPorcentaje(subtotal - descuento, PeriodoPromocion.PORCENTAJE_DESCUENTO) else 0L
 
     // Total final (IVA incluido)
-    fun calcularTotal(): Double = calcularSubtotal() - calcularDescuento() - calcularDescuentoPromocion()
+    val total: Long = subtotal - descuento - descuentoPromocion
 
     // Desglose del IVA contenido en el total
-    fun calcularNeto(): Double = calcularTotal() / (1 + TASA_IVA)
-    fun calcularIva(): Double = calcularTotal() - calcularNeto()
+    val neto: Long = dividirRedondeado(total * 100, (100 + PORCENTAJE_IVA).toLong())
+    val iva: Long = total - neto
 
     // Operator overloading (+): combina dos pedidos del mismo cliente en uno nuevo
     // Suma las cantidades de productos iguales (equals/hashCode de Producto) y recalcula el total con descuentos
@@ -78,7 +81,7 @@ class Pedido(
     // Desestructuración: val (cliente, productos, total) = pedido
     operator fun component1(): Cliente = cliente
     operator fun component2(): List<ItemPedido> = items
-    operator fun component3(): Double = calcularTotal()
+    operator fun component3(): Long = total
 
     fun cambiarEstado(nuevoEstado: EstadoPedido): Boolean {
         if (estado.esFinal) {
@@ -90,8 +93,8 @@ class Pedido(
     }
 
     companion object {
-        const val TASA_IVA = 0.19
-        const val TASA_DESCUENTO = 0.10
+        const val PORCENTAJE_IVA = 19
+        const val PORCENTAJE_DESCUENTO = 10
         const val MINIMO_PIZZAS_DESCUENTO = 3
 
         // Los pedidos combinados reciben ids desde #9001

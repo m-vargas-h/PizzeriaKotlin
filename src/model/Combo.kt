@@ -5,7 +5,7 @@ import annotations.Promocionable
 @Promocionable("Combos con precio especial participan en las promociones")
 class Combo(
     nombre: String,
-    precio: Int,
+    precio: Long,
     val productos: List<Producto>
 ) : Producto(nombre, precio, sumarIngredientes(productos)) {
 

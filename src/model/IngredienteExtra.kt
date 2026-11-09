@@ -4,7 +4,7 @@ package model
 // Sin @Promocionable: no participa en promociones
 class IngredienteExtra(
     val ingrediente: String,
-    precio: Int
+    precio: Long
 ) : Producto("Extra $ingrediente", precio, mapOf(ingrediente to 1)) {
 
     override val categoria: CategoriaProducto

@@ -16,13 +16,13 @@ fun mostrarResumenAvanzado(pedidoA: Pedido, pedidoB: Pedido, pedidoOtroCliente: 
     // 1) Operator overloading: pedidoA + pedidoB
     println("\n1) PEDIDOS COMBINADOS (operador +)")
     val combinado = pedidoA + pedidoB
-    println("  #${pedidoA.idPedido}: ${detalleItems(pedidoA)} -> ${formatearPesos(pedidoA.calcularTotal())}")
-    println("  #${pedidoB.idPedido}: ${detalleItems(pedidoB)} -> ${formatearPesos(pedidoB.calcularTotal())}")
+    println("  #${pedidoA.idPedido}: ${detalleItems(pedidoA)} -> ${formatearPesos(pedidoA.total)}")
+    println("  #${pedidoB.idPedido}: ${detalleItems(pedidoB)} -> ${formatearPesos(pedidoB.total)}")
     println("  #${combinado.idPedido} = #${pedidoA.idPedido} + #${pedidoB.idPedido}: ${detalleItems(combinado)}")
-    println("    Subtotal:  ${formatearPesos(combinado.calcularSubtotal())}")
-    println("    Descuento: -${formatearPesos(combinado.calcularDescuento())} (${combinado.cantidadPizzas()} pizzas)")
-    println("    Promoción: -${formatearPesos(combinado.calcularDescuentoPromocion())}")
-    println("    Total:     ${formatearPesos(combinado.calcularTotal())}")
+    println("    Subtotal:  ${formatearPesos(combinado.subtotal)}")
+    println("    Descuento: -${formatearPesos(combinado.descuento)} (${combinado.cantidadPizzas()} pizzas)")
+    println("    Promoción: -${formatearPesos(combinado.descuentoPromocion)}")
+    println("    Total:     ${formatearPesos(combinado.total)}")
     println("    Notas:     ${combinado.notasParaMostrar()}")
     try {
         pedidoA + pedidoOtroCliente

@@ -2,10 +2,10 @@ package model
 
 import java.time.LocalDate
 
-// Periodo de promociones: los pedidos con fecha dentro del rango reciben descuento sobre su total
+// Los pedidos con fecha dentro del rango reciben descuento sobre su total
 object PeriodoPromocion {
     const val NOMBRE = "Promo Noviembre"
-    const val TASA_DESCUENTO = 0.15
+    const val PORCENTAJE_DESCUENTO = 15
     val INICIO: LocalDate = LocalDate.of(2026, 11, 1)
     val FIN: LocalDate = LocalDate.of(2026, 11, 30)
 

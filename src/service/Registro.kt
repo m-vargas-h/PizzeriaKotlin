@@ -49,7 +49,7 @@ fun obtenerCatalogo(): List<Producto> = catalogo.toList()
 // NumberFormatException se captura primero porque es subclase de IllegalArgumentException
 fun registrarProducto(nombre: String, precioTexto: String, ingredientes: Map<String, Int>): Producto? =
     try {
-        val pizza = Pizza(nombre, precioTexto.trim().toInt(), ingredientes)
+        val pizza = Pizza(nombre, precioTexto.trim().toLong(), ingredientes)
         if (agregarAlCatalogo(pizza)) {
             println("  Producto registrado: ${pizza.nombre} (${formatearPesos(pizza.precio)})")
             pizza
